@@ -9,60 +9,64 @@ const screen = document.getElementById("belowWindow");
 let firstNum = null;
 let secondNum = null;
 let operator = null;
+let secondOperator = null; // will work a temporary variable role
 
 let hasBeenCalculated = false; // a variable to control calculation and prevent the same recalculations
 
-const cleanScreen = () => { screen.textContent = "0"; }; // a function for cleaning screen
+const cleanScreen = () => { screen.textContent = "0"; };
+
+let passToSecondNumber = false; // a variable to pass to second number valuation
 
 digitButtons.forEach(digit => digit.addEventListener("click", function(){
-    if(screen.textContent === "0"){
+    if(passToSecondNumber || screen.textContent === '0'){
         screen.textContent = "";
+
+        passToSecondNumber = false;
     }
     screen.textContent += digit.textContent;
 }));
 
 operatorButtons.forEach(operatorButton => operatorButton.addEventListener("click", function(){
+    if (operator === null) {
+        // first number and operator are being declared
+        firstNum = +screen.textContent;
+        operator = operatorButton.textContent;
 
-    hasBeenCalculated = false; // once new operation started, calculation is cleared
-
-    operator = operatorButton.textContent;
-
-    // defining the first number
-    if (firstNum === null) {
-        firstNum = +screen.textContent; // + operator in front of the variable is similar with Number(variable)
-
-        cleanScreen();
-
+        hasBeenCalculated = false;
     }
-    // defining the second number and calculating the result
-    else if (secondNum === null) {
+    else if (secondOperator === null) {
+        // second number and next operator are being declared and result is evaluated based on <firstNum, operation, secondNum>
         secondNum = +screen.textContent;
+        secondOperator = operatorButton.textContent;
 
-        screen.textContent = operate(firstNum, secondNum, operator);
+        let result = operate(firstNum, +screen.textContent, operator);
+        screen.textContent = result;
 
-        // once calculation is held, the relevant variable assignment is being done
-        hasBeenCalculated = true;
-    }
-    //after calculation result value is assigned to the first number
-    else if (firstNum !== null && secondNum !== null) {
-        // comes back to the start of the second situation as a recursion like fibonacci numbers
-        firstNum = +screen.textContent; // or result
+        // cleaning the memory; converting the next operator into main operator and the result to the first number
+        operator = secondOperator;
+        secondOperator = null;
+
+        firstNum = result;
         secondNum = null;
-
-        cleanScreen();
     }
+
+    passToSecondNumber = true;
 }));
 
 document.getElementById("calculate").addEventListener("click", function(){
     if (firstNum !== null && !hasBeenCalculated) {
         secondNum = +screen.textContent;
 
-        screen.textContent = operate(firstNum, secondNum, operator);
+        let result = operate(firstNum, secondNum, operator);
+        screen.textContent = result;
 
         hasBeenCalculated = true;
-
+        
         firstNum = null;
         secondNum = null;
+
+        operator = null;
+        secondOperator = null;
     }
 });
 
@@ -70,16 +74,12 @@ document.getElementById("clear-all").addEventListener("click", (event) => {
     firstNum = null;
     secondNum = null;
 
+    operator = null;
+    secondOperator = null;
+
     cleanScreen();
 });
 
 document.getElementById("clear").addEventListener("click", (event) => {
-    if (secondNum !== null) {
-        secondNum = null;
-    }
-    else {
-        firstNum = null;
-    }
-
     cleanScreen();
-})
+});
